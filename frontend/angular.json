@@ -1,0 +1,23 @@
+{
+  "$schema":"./node_modules/@angular/cli/lib/config/schema.json",
+  "version":1,
+  "newProjectRoot":"projects",
+  "projects":{
+    "adarshcargo-web":{
+      "projectType":"application",
+      "schematics":{"@schematics/angular:component":{"style":"scss","standalone":true}},
+      "root":"",
+      "sourceRoot":"src",
+      "prefix":"ac",
+      "architect":{
+        "build":{
+          "builder":"@angular-devkit/build-angular:application",
+          "options":{"outputPath":"dist/adarshcargo-web","index":"src/index.html","browser":"src/main.ts","polyfills":["zone.js"],"tsConfig":"tsconfig.app.json","inlineStyleLanguage":"scss","optimization":{"scripts":true,"styles":true,"fonts":false},"assets":["src/assets"],"styles":["src/styles.scss"]},
+          "configurations":{"production":{"budgets":[{"type":"initial","maximumWarning":"1.5MB","maximumError":"3MB"}],"outputHashing":"all"},"development":{"optimization":false,"sourceMap":true}},
+          "defaultConfiguration":"production"
+        },
+        "serve":{"builder":"@angular-devkit/build-angular:dev-server","configurations":{"production":{"buildTarget":"adarshcargo-web:build:production"},"development":{"buildTarget":"adarshcargo-web:build:development"}},"defaultConfiguration":"development"}
+      }
+    }
+  }
+}

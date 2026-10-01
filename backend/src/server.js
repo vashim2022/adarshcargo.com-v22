@@ -1,0 +1,32 @@
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import rateLimit from 'express-rate-limit';
+import { connectDatabase } from './config/database.js';
+import contentRoutes from './routes/content.routes.js';
+import shipmentRoutes from './routes/shipment.routes.js';
+import leadRoutes from './routes/lead.routes.js';
+import authRoutes from './routes/auth.routes.js';
+import adminRoutes from './routes/admin.routes.js';
+import partnerRoutes from './routes/partner.routes.js';
+
+const app = express();
+const port = process.env.PORT || 3000;
+app.set('trust proxy', 1);
+app.use(helmet());
+app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',').map(v => v.trim()) || true }));
+app.use(express.json({ limit: '1mb' }));
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+app.use('/api', rateLimit({ windowMs: 15 * 60 * 1000, limit: 300, standardHeaders: true, legacyHeaders: false }));
+app.get('/api/health', (_req, res) => res.json({ status: 'ok', service: 'adarshcargo.com-api', time: new Date().toISOString() }));
+app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/partner', partnerRoutes);
+app.use('/api/content', contentRoutes);
+app.use('/api/shipments', shipmentRoutes);
+app.use('/api', leadRoutes);
+app.use((err, _req, res, _next) => { console.error(err); res.status(500).json({ message: 'Internal server error' }); });
+
+connectDatabase().then(() => app.listen(port, () => console.log(`API listening on ${port}`))).catch(err => { console.error('Startup failed:', err); process.exit(1); });

@@ -1,0 +1,73 @@
+services:
+  mongo:
+    image: mongo:8
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-adarsh}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-change-me}
+    volumes:
+      - mongo_data:/data/db
+    networks: [cargo]
+
+  mongo-express:
+    image: mongo-express:1.0.2
+    restart: unless-stopped
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_ROOT_USERNAME:-adarsh}:${MONGO_ROOT_PASSWORD:-change-me}@mongo:27017/?authSource=admin
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
+      ME_CONFIG_BASICAUTH_ENABLED: "true"
+      ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_EXPRESS_USERNAME:-admin}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD:-change-me-too}
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mongo
+    networks: [cargo]
+
+  api:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      MONGO_URI: mongodb://${MONGO_ROOT_USERNAME:-adarsh}:${MONGO_ROOT_PASSWORD:-change-me}@mongo:27017/adarshcargo?authSource=admin
+      JWT_SECRET: ${JWT_SECRET:-replace-this-with-a-long-random-secret}
+      CORS_ORIGIN: ${CORS_ORIGIN:-https://adarshcargo.com}
+      PUBLIC_WEB_URL: ${PUBLIC_WEB_URL:-http://localhost}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-Adarsh Cargo <no-reply@adarshcargo.com>}
+      RESET_ALLOW_DEV_LINK: ${RESET_ALLOW_DEV_LINK:-true}
+    depends_on:
+      - mongo
+    networks: [cargo]
+
+  seed:
+    build: ./backend
+    environment:
+      NODE_ENV: production
+      MONGO_URI: mongodb://${MONGO_ROOT_USERNAME:-adarsh}:${MONGO_ROOT_PASSWORD:-change-me}@mongo:27017/adarshcargo?authSource=admin
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@adarshcargo.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@12345}
+    command: ["node", "src/seed-data.js"]
+    depends_on:
+      - mongo
+    networks: [cargo]
+
+  web:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    networks: [cargo]
+
+volumes:
+  mongo_data:
+
+networks:
+  cargo:

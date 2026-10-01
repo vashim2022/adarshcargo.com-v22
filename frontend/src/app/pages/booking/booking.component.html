@@ -1,0 +1,33 @@
+<section class="page booking-page">
+  <div class="container booking-wrap">
+    <div class="booking-intro">
+      <span class="eyebrow">Book a shipment</span>
+      <h1>Book your parcel.<br><em>Get your AWB instantly.</em></h1>
+      <p class="lead">Enter the shipment details and Adarsh Cargo will create a unique Air Waybill (AWB) number. Use that number anytime to track your parcel.</p>
+      <div class="booking-steps">
+        <span><b>01</b> Enter shipment details</span>
+        <span><b>02</b> Confirm booking</span>
+        <span><b>03</b> Track with your AWB</span>
+      </div>
+    </div>
+
+    <div class="booking-card" *ngIf="!booked">
+      <form (ngSubmit)="submit()">
+        <div class="form-section"><h2>Sender</h2><div class="two"><label>Name<input required name="senderName" [(ngModel)]="form.sender.name" placeholder="Sender name"></label><label>City<input required name="senderCity" [(ngModel)]="form.sender.city" placeholder="Mumbai"></label></div></div>
+        <div class="form-section"><h2>Receiver</h2><div class="two"><label>Name<input required name="receiverName" [(ngModel)]="form.receiver.name" placeholder="Receiver name"></label><label>City<input required name="receiverCity" [(ngModel)]="form.receiver.city" placeholder="Delhi"></label></div></div>
+        <div class="form-section"><h2>Cargo</h2><div class="two"><label>Service<select name="service" [(ngModel)]="form.service"><option>Air Cargo</option><option>Road Freight</option><option>Express Logistics</option><option>Door-to-Door</option></select></label><label>Package type<input required name="packageType" [(ngModel)]="form.packageType" placeholder="General Cargo"></label></div><div class="two"><label>Weight (kg)<input required type="number" min="0.1" step="0.1" name="weight" [(ngModel)]="form.weight" placeholder="10"></label><label>Expected delivery date<input type="date" name="eta" [(ngModel)]="form.eta"></label></div></div>
+        <p class="error" *ngIf="error">{{error}}</p>
+        <button class="btn btn-primary" type="submit" [disabled]="busy">{{busy ? 'Creating AWB…' : 'Book parcel & generate AWB ↗'}}</button>
+      </form>
+    </div>
+
+    <div class="booking-success" *ngIf="booked">
+      <div class="success-icon">✓</div>
+      <span class="eyebrow">Booking confirmed</span>
+      <h2>Your parcel has been booked.</h2>
+      <p>Your unique AWB number is ready. Keep it safe — you can use it to track the shipment.</p>
+      <div class="awb-card"><small>AWB NUMBER</small><strong>{{booked.awbNumber}}</strong></div>
+      <div class="success-actions"><button class="btn btn-primary" type="button" (click)="track()">Track this shipment →</button><a class="btn btn-secondary" routerLink="/">Back to home</a></div>
+    </div>
+  </div>
+</section>

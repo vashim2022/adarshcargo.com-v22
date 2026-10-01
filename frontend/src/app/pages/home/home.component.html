@@ -1,0 +1,16 @@
+<section class="landing-hero">
+  <div class="container landing-hero-wrap">
+    <div class="landing-image-card">
+      <img src="assets/branding/pan-india-cargo-network.webp" alt="Adarsh Cargo Services pan India cargo network" class="landing-image">
+      <div class="landing-actions">
+        <a class="btn btn-primary" routerLink="/quote">Plan a shipment ↗</a>
+        <a class="landing-track" routerLink="/track">Track AWB <span>→</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="stats"><div class="container stat-grid"><div *ngFor="let s of stats"><strong>{{s.value}}</strong><span>{{s.label}}</span></div></div></section>
+<section class="page services-section"><div class="container"><div class="section-head"><div><span class="eyebrow">What we move</span><h2>Logistics that fits<br>your operation.</h2></div><a class="text-link" routerLink="/services">View all services →</a></div><div class="service-grid"><article class="service-card" *ngFor="let s of services"><div class="icon">{{s.icon}}</div><h3>{{s.title}}</h3><p>{{s.description}}</p><div class="service-bottom"><span>{{s.features?.[0]}}</span><a routerLink="/quote">↗</a></div></article></div></div></section>
+<section class="band"><div class="container band-grid"><div><span class="eyebrow">Built for visibility</span><h2>Every shipment has<br>a story. See it.</h2></div><div><p>From pickup to final delivery, every milestone is recorded so your team can plan ahead and your customers stay informed.</p><a class="btn btn-dark" routerLink="/track">Track a shipment →</a></div></div></section>
+<section class="page"><div class="container quote-banner"><div><span class="eyebrow">Start moving</span><h2>Tell us what you need<br>to move.</h2></div><a class="btn btn-primary" routerLink="/quote">Get a tailored quote ↗</a></div></section>

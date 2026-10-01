@@ -1,0 +1,89 @@
+<section class="partner-shell">
+  <aside class="partner-side">
+    <a routerLink="/" class="partner-brand"><span>AC</span><div><b>ADARSH</b><small>CARGO OPS</small></div></a>
+    <div class="partner-user"><div class="avatar">{{auth.user()?.name?.charAt(0)?.toUpperCase()}}</div><div><strong>{{auth.user()?.name}}</strong><small>Delivery Partner</small></div></div>
+    <nav>
+      <a class="active" href="#jobs">My delivery jobs</a>
+      <a href="#workflow">Delivery workflow</a>
+    </nav>
+    <div class="side-bottom"><a routerLink="/change-password">Change password</a><button (click)="logout()">Sign out</button></div>
+  </aside>
+
+  <main class="partner-main">
+    <header class="partner-header"><div><p class="eyebrow">FIELD OPERATIONS</p><h1>Good day, {{auth.user()?.name}}.</h1><p class="sub">Manage assigned pickups, delivery updates, exceptions and proof of delivery from one place.</p></div><a routerLink="/" class="website-link">View website</a></header>
+    <p class="notice" *ngIf="message">{{message}}</p>
+    <div *ngIf="loading" class="loading">Loading your delivery work…</div>
+    <ng-container *ngIf="!loading">
+      <section class="stats">
+        <article><span>Active jobs</span><strong>{{dashboard.assigned||0}}</strong><small>Currently assigned</small></article>
+        <article><span>Picked up</span><strong>{{dashboard.pickedUp||0}}</strong><small>Pickup completed</small></article>
+        <article><span>Out for delivery</span><strong>{{dashboard.outForDelivery||0}}</strong><small>Customer handover</small></article>
+        <article><span>Delivered</span><strong>{{dashboard.delivered||0}}</strong><small>Completed jobs</small></article>
+      </section>
+
+      <section id="jobs" class="panel">
+        <div class="panel-head"><div><h2>My assigned shipments</h2><small>Only shipments assigned by an administrator appear here.</small></div><span>{{shipments.length}} total</span></div>
+        <div class="job-table" *ngIf="shipments.length">
+          <div class="job-row head"><span>AWB</span><span>Route</span><span>Receiver</span><span>Status</span><span>Action</span></div>
+          <div class="job-row" *ngFor="let s of shipments">
+            <span><b>{{s.awbNumber}}</b><small>{{s.service}}</small></span>
+            <span>{{s.sender?.city}} → {{s.receiver?.city}}</span>
+            <span><b>{{s.receiver?.name}}</b><small>{{s.receiver?.city}}</small></span>
+            <span class="status">{{s.status}}</span>
+            <button class="small" (click)="select(s)">Manage</button>
+          </div>
+        </div>
+        <div class="empty" *ngIf="!shipments.length">No shipments have been assigned to you yet. Your admin must create/book a shipment and assign it to your account. <button type="button" class="small" (click)="refresh()">Refresh jobs</button></div>
+      </section>
+
+      <section class="workflow" id="workflow">
+        <article><b>1. Pickup</b><span>Verify AWB, pieces and package condition, then mark the shipment Picked Up.</span><strong>Admin must assign a shipment first.</strong></article>
+        <article><b>2. Movement</b><span>Keep location and status updates current while the shipment is in transit or at a hub.</span><strong>Use the action buttons on a selected job.</strong></article>
+        <article><b>3. Delivery</b><span>Mark Out for Delivery, capture receiver details and proof, then complete the delivery.</span><strong>POD is required before Delivered.</strong></article>
+        <article><b>4. Exception</b><span>Record customer unavailable, wrong address, refusal or another delivery failure with remarks.</span><strong>Exceptions stay in tracking history.</strong></article>
+      </section>
+
+      <section class="manage" *ngIf="selected">
+        <div class="panel selected-card">
+          <div class="panel-head"><div><p class="eyebrow">ACTIVE JOB</p><h2>{{selected.awbNumber}}</h2><small>{{selected.sender?.city}} → {{selected.receiver?.city}} · {{selected.weight || '—'}} kg</small></div><span class="status-pill">{{selected.status}}</span></div>
+          <div class="receiver"><div><span>Receiver</span><b>{{selected.receiver?.name}}</b><small>{{selected.receiver?.city}}</small></div><div><span>Contact</span><b>{{selected.receiver?.name ? 'Customer contact on shipment' : '—'}}</b><small>Use your operational contact process</small></div></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><div><h2>Delivery actions</h2><small>Only valid next steps for the current shipment are enabled.</small></div><span>{{selected.status}}</span></div>
+          <div class="form-grid">
+            <label>Current location<input [(ngModel)]="statusForm.location" placeholder="Mumbai Hub"></label>
+            <label class="wide">Operational note<input [(ngModel)]="statusForm.message" placeholder="Package reached destination hub"></label>
+            <div class="action-row wide">
+              <button *ngFor="let next of allowedNextStatuses(selected.status)" type="button" class="primary" [disabled]="next==='Delivered' && !selected.pod?.receiverName" (click)="quickStatus(next)">{{next}}</button>
+              <span *ngIf="!allowedNextStatuses(selected.status).length" class="muted">No further operational status is available.</span>
+            </div>
+            <small class="hint wide" *ngIf="selected.status==='Out for Delivery' && !selected.pod?.receiverName">Capture POD below before the Delivered action becomes available.</small>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><div><h2>Proof of delivery</h2><small>Capture receiver confirmation before marking a shipment Delivered.</small></div><span *ngIf="selected.pod" class="status-pill success">POD captured</span></div>
+          <div class="form-grid">
+            <label>Receiver name<input [(ngModel)]="podForm.receiverName" placeholder="Name of person receiving shipment"></label>
+            <label>Receiver phone<input [(ngModel)]="podForm.receiverPhone" placeholder="Optional"></label>
+            <label>Confirmation type<select [(ngModel)]="podForm.confirmationType"><option value="signature">Signature reference</option><option value="otp">OTP</option><option value="photo">Photo reference</option><option value="other">Other confirmation</option></select></label>
+            <label>Confirmation reference<input [(ngModel)]="podForm.confirmationReference" placeholder="OTP / signature ID / photo reference"></label>
+            <label class="wide">POD remarks<textarea [(ngModel)]="podForm.remarks" rows="3" placeholder="Receiver accepted package in good condition"></textarea></label>
+            <button class="primary wide" type="button" (click)="capturePod()">Save proof of delivery</button>
+          </div>
+        </div>
+
+        <div class="panel exception-panel">
+          <div class="panel-head"><div><h2>Delivery exception</h2><small>Use this when delivery cannot be completed.</small></div></div>
+          <div class="form-grid">
+            <label>Reason<select [(ngModel)]="exceptionForm.reason"><option value="">Select reason</option><option>Customer unavailable</option><option>Customer refused delivery</option><option>Wrong address</option><option>Address incomplete</option><option>Phone unreachable</option><option>Premises closed</option><option>Shipment damaged</option><option>Other</option></select></label>
+            <label>Location<input [(ngModel)]="exceptionForm.location" placeholder="Delivery location"></label>
+            <label class="wide">Remarks<input [(ngModel)]="exceptionForm.message" placeholder="Customer requested delivery tomorrow"></label>
+            <button class="danger-btn wide" type="button" (click)="reportException()">Record delivery exception</button>
+          </div>
+        </div>
+      </section>
+    </ng-container>
+  </main>
+</section>
